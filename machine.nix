@@ -26,6 +26,7 @@ in {
   };
   
   networking.hostName = "joevm";
+  services.openssh.enable = true;
 
   users.mutableUsers = false;
   
@@ -33,16 +34,21 @@ in {
     cores = 2;
     memorySize = 2048;
     diskSize = 1024*4;
+
+    forwardPorts = [
+      { from = "host"; host.port = 2222; guest.port = 22; }
+    ];
   };
 
   environment.systemPackages = [
   ];
 
+  users.extraGroups.vboxusers.members = [ "joe" ];
   virtualisation.virtualbox.host = {
     enable = true;
     headless = true;
     enableHardening = true;
-    enableWebService = true;  # FIXME   Bug there
+    enableWebService = false; #true;  # FIXME   Bug there
   };
 
   # To test:
