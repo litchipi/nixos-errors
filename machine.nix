@@ -20,4 +20,11 @@
     memorySize = 2048;
     diskSize = 1024*4;
   };
+
+  virtualisation.virtualbox.host = {
+    enable = true;
+    headless = true;
+    enableWebService = true;
+    # package = pkgs.virtualbox;
+  };
 }
