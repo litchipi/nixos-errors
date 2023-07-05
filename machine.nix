@@ -1,5 +1,22 @@
-{ config, lib, pkgs, ...}:
-{
+{ config, lib, pkgs, ...}: let
+  # Recreate the config from https://github.com/NixOS/nixpkgs/blob/nixos-23.05/nixos/modules/virtualisation/virtualbox-host.nix
+  package = pkgs.virtualbox;
+  virtualbox = package.override {
+    enableHardening = true;
+    headless = true;
+    enableWebService = false;  # FIXME Bug there:   wsimport not found
+  };
+
+  kernelModules = config.boot.kernelPackages.virtualbox.override {
+    inherit virtualbox;
+  };
+
+  vbox_config = {
+    boot.kernelModules = [ "vboxdrv" "vboxnetadp" "vboxnetflt" ];
+    boot.extraModulePackages = [ kernelModules ];
+    environment.systemPackages = [ virtualbox ];
+  };
+in {
   system.stateVersion = "23.05";
   
   users.users."joe" = {
@@ -12,19 +29,27 @@
 
   users.mutableUsers = false;
   
-  environment.systemPackages = [
-  ];
-
   virtualisation = {
     cores = 2;
     memorySize = 2048;
     diskSize = 1024*4;
   };
 
+  environment.systemPackages = [
+  ];
+
   virtualisation.virtualbox.host = {
     enable = true;
     headless = true;
-    enableWebService = true;
-    # package = pkgs.virtualbox;
+    enableHardening = true;
+    enableWebService = true;  # FIXME   Bug there
   };
+
+  # To test:
+  #  - Without hardening   ->   fail wsimport
+  #  - Build the package "virtualbox" WITH hardening -> OK
+  #  - Build the package "virtualbox" WITHOUT hardening -> OK
+  #  - Build only the kernel modules:
+  #    [ "vboxdrv" "vboxnetadp" "vboxnetflt" ]
+# } // vbox_config
 }
